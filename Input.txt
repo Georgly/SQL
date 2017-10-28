@@ -1,0 +1,6 @@
+select *, d, gd
+from Ba
+where bad < Da_d_
+group by a, b
+having gd > 1000
+order by b;

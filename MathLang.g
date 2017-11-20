@@ -20,6 +20,7 @@ tokens {
   BLOCK                ;
   FIELDS               ;
   TABLES               ;
+  REQUEST              ;
 }
 
 
@@ -74,7 +75,7 @@ group:
   '('! term ')'!
 | NUMBER
 | request_params
-| '('! expr1 ')'!
+| '('! exprList ')'!
 ;
 
 mult: group ( ( MUL | DIV )^ group )*  ;
@@ -87,7 +88,7 @@ request_params : '*' | table_field;
 formal_params: ( request_params (',' request_params)* ) -> ^(FIELDS request_params+);
 select_: SELECT^ formal_params;
 
-tables_or_request: FIELD | '('! expr1 ')'!;
+tables_or_request: FIELD | '('! exprList ')'!;
 request_tables: (tables_or_request (',' tables_or_request)*) -> ^(TABLES tables_or_request+);
 from_: FROM^ request_tables;
 
@@ -114,10 +115,14 @@ expr2:
 ;
 
 exprList:
-  ( expr1 (';')!)+ -> ^(BLOCK expr1)
+   ( expr1 ) -> ^(BLOCK expr1)
 ;
 
-program: exprList  ;
+requestList:
+ (exprList (';')!) -> ^(REQUEST exprList)
+;
+
+program: requestList  ;
 
 result: program EOF!;
 

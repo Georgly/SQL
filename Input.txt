@@ -1,6 +1,6 @@
-select *, d, gd
-from Ba
-where bad < Da_d_
+select A.d, gd, Ba.*
+from Ba, (select * from D join B where B.d<D.gd)
+where bad < (select dady from A)
 group by a, b
 having gd > 1000
 order by b;

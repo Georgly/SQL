@@ -14,12 +14,13 @@ tokens {
   FROM = 'from'        ;
   WHERE = 'where'      ;
   GROUP_BY = 'group by' ;
-  ORDER_BY = 'order by' ;
   HAVING = 'having'    ;
+  ORDER_BY = 'order by' ;
   PROGRAM              ;
   BLOCK                ;
   FIELDS               ;
   TABLES               ;
+  REQUEST              ;
 }
 
 
@@ -44,13 +45,16 @@ ML_COMMENT:
   }
 ;
 
-ID_LITERAL: ('0'..'9')*('a..z' | 'A'..'Z' | '_')('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*
-;
-DOT_ID:    '.'ID_LITERAL;
-DOT:    '.';
+
 
 NUMBER: ('0'..'9')+ ('.' ('0'..'9')+)?
 ;
+FIELD: ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )
+        ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )*  
+;
+
+DOT:    '.'     ;
+
 ADD:    '+'     ;
 SUB:    '-'     ;
 MUL:    '*'     ;
@@ -66,10 +70,12 @@ LT:       '<'   ;
 ASSIGN: '='     ;
 
 
+
 group:
   '('! term ')'!
 | NUMBER
 | request_params
+| '('! exprList ')'!
 ;
 
 mult: group ( ( MUL | DIV )^ group )*  ;
@@ -77,15 +83,16 @@ add:  mult  ( ( ADD | SUB )^ mult  )*  ;
 compare: add ( ( GE | LE | NEQUALS | EQUALS | GT | LT)^ add )?  ;
 term: compare  ;
 
-table_field: (ID_LITERAL DOT ID_LITERAL) -> ^(ID_LITERAL ID_LITERAL);
-request_params : '*' | ID_LITERAL | table_field;
-formal_params: ( request_params (',' request_params)* ) -> ^(FIELDS request_params*);
+table_field: (FIELD DOT^ (FIELD | '*')) | FIELD;
+request_params : '*' | table_field;
+formal_params: ( request_params (',' request_params)* ) -> ^(FIELDS request_params+);
 select_: SELECT^ formal_params;
 
-request_tables: (ID_LITERAL (',' ID_LITERAL)*) -> ^(TABLES ID_LITERAL+);
+tables_or_request: FIELD | '('! exprList ')'!;
+request_tables: (tables_or_request (',' tables_or_request)*) -> ^(TABLES tables_or_request+);
 from_: FROM^ request_tables;
 
-fields_list: ((ID_LITERAL | table_field) (','! ID_LITERAL | table_field)*);
+fields_list: table_field (','! table_field)*;
 groupby: GROUP_BY^ fields_list;
 
 orderby: ORDER_BY^ fields_list;
@@ -108,10 +115,14 @@ expr2:
 ;
 
 exprList:
-  ( expr1 (';')!)* -> ^(BLOCK expr1)
+   ( expr1 ) -> ^(BLOCK expr1)
 ;
 
-program: exprList  ;
+requestList:
+ (exprList (';')!) -> ^(REQUEST exprList)
+;
+
+program: requestList  ;
 
 result: program EOF!;
 

@@ -14,8 +14,8 @@ tokens {
   FROM = 'from'        ;
   WHERE = 'where'      ;
   GROUP_BY = 'group by' ;
-  ORDER_BY = 'order by' ;
   HAVING = 'having'    ;
+  ORDER_BY = 'order by' ;
   PROGRAM              ;
   BLOCK                ;
   FIELDS               ;

@@ -1,2 +1,2 @@
-# SQL
-# SQL grammar with GROUP BY and HAVING
+# SQL Compilator(Interpretator)
+ SQL grammar and semantic analayzer

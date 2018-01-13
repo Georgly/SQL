@@ -51,6 +51,9 @@ FIELD: ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )
         ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )*  
 ;
 
+STRING: '"' FIELD* '"'
+;
+
 DOT:    '.'     ;
 
 ADD:    '+'     ;
@@ -72,6 +75,7 @@ ASSIGN: '='     ;
 group:
   '('! term ')'!
 | NUMBER
+| STRING
 | request_params
 | '('! exprList ')'!
 ;

@@ -1,0 +1,5 @@
+name	dady
+string	string
+KiS	Gorshok
+Sector Gaza	Hoy
+Queen	Mercury

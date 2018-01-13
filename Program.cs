@@ -27,7 +27,7 @@ namespace MathLang
                 MathLangParser parser = new MathLangParser(tokens);
                 ITree program = (ITree)parser.execute().Tree;
                 AstNodePrinter.Print(program);
-                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(program);
+                Interpreter semanticAnalyzer = new Interpreter(program);
                 semanticAnalyzer.CreateTable("tables.txt");
                 Console.WriteLine();
                 semanticAnalyzer.StartAnalyze();

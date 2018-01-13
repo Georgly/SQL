@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using Antlr.Runtime.Tree;
 using System.Linq;
 using System.Text;
 using System.Globalization;
 using Antlr.Runtime;
-using Antlr.Runtime.Tree;
-using System.IO;
 
 namespace MathLang
 {
@@ -15,30 +15,29 @@ namespace MathLang
         public int level;
     }
 
-    public class SemanticAnalyzer
+    public class Interpreter
     {
-        List<ExistTableStruct> existTables = new List<ExistTableStruct>();
-        Dictionary<string, Table> tables = new Dictionary<string, Table>();
         ITree tree;
         int level = 0;
+        Dictionary<string, Table> tables;
+        Dictionary<int, List<Table>> usingTables;
+        Queue<BlockToken> query = new Queue<BlockToken>();
 
-        public SemanticAnalyzer(ITree tree)
+        public Interpreter(ITree tree)
         {
             this.tree = tree;
+            tables = new Dictionary<string, Table>();
+            usingTables = new Dictionary<int, List<Table>>();
         }
 
         public void StartAnalyze()
         {
-            //Console.WriteLine(tree.Text);
-            //Console.WriteLine(tree.GetChild(0).Text);
-            //ITree child = tree.GetChild(0);
-            //SwapTreeNode(child);
             string errStr = "";
             for (int i = 0; i < tree.ChildCount; i++)
             {
-                /*errStr += */AnalyzeNode(tree.GetChild(i), ref errStr);
+                AnalyzeNode(tree.GetChild(i), ref errStr);
             }
-            Console.WriteLine(errStr);
+            Console.WriteLine(errStr + "Анализ завершён.");
         }
 
         string AnalyzeNode(ITree node, ref string errStr)
@@ -47,104 +46,94 @@ namespace MathLang
             {
                 case "BLOCK":
                     {
-                        SwapTreeNode(node);
                         level++;
-                        for (int i = 0; i < node.ChildCount; i++)
-                        {
-                            AnalyzeNode(node.GetChild(i), ref errStr);
-                        }
+                        BlockToken block = new BlockToken(node, level, tables, usingTables);
+                        block.SemanticAnalization();
+                        query.Enqueue(block);
                         level--;
                         break;
                     }
-                case "from":
-                case "select":
-                case "TABLES":
-                case "FIELDS":
-                    {
-                        for (int i = 0; i < node.ChildCount; i++)
-                        {
-                            AnalyzeNode(node.GetChild(i), ref errStr);
-                        }
-                        break;
-                    }
-                case "where":
-                    {
-                        break;
-                    }
-                case "group by":
-                    {
-                        break;
-                    }
-                case "having":
-                    {
-                        break;
-                    }
-                case "order by":
-                    {
-                        break;
-                    }
-                case ".":
-                    {
-                        if (IsTableDeclared(node.GetChild(0)))
-                        {
-                            if (!IsFieldExist(node.GetChild(1)))
-                            {
-                                errStr += "Ошибка: поля \"" + 
-                                          node.GetChild(1).Text + 
-                                          "\" нет в таблице" + 
-                                          node.GetChild(0).Text
-                                          + "\n";
-                            }
-                        }
-                        else
-                        {
-                            errStr += "Ошибка: таблица \"" + 
-                                      node.GetChild(0).Text + 
-                                      "\" не существует в данном контексте \n";
-                        }
-                        break;
-                    }
-                case "<":
-                case ">":
-                case "==":
-                case ">=":
-                case "<=":
-                case "<>":
-                    {
-                        break;
-                    }
-                default:
-                    {
-                        if (node.Parent.Text == "TABLES")
-                        {
-                            ExistTableStruct table = new ExistTableStruct
-                            {
-                                table = tables[node.Text],
-                                level = level
-                            };
-                            existTables.Add(table);
-                        }
-                        if (node.Parent.Text == "FIELDS")
-                        {
-                            if (!IsFieldExist(node))
-                            {
-                                errStr += "Ошибка: поле \"" +
-                                      node.Text +
-                                      "\" не существует в данном контексте \n";
-                            }
-                        }
-                        break;
-                    }
+
+                    //case "from":
+                    //case "select":
+                    //case "TABLES":
+                    //case "FIELDS":
+                    //    {
+                    //        for (int i = 0; i < node.ChildCount; i++)
+                    //        {
+                    //            AnalyzeNode(node.GetChild(i), ref errStr);
+                    //        }
+                    //        break;
+                    //    }
+                    //case "where":
+                    //    {
+                    //        for (int i = 0; i < node.ChildCount; i++)
+                    //        {
+                    //            AnalyzeNode(node.GetChild(i), ref errStr);
+                    //        }
+                    //        break;
+                    //    }
+                    //case "order by":
+                    //    {
+                    //        break;
+                    //    }
+                    //case ".":
+                    //    {
+                    //        if (IsTableDeclared(node.GetChild(0)))
+                    //        {
+                    //            if (!IsFieldExist(node.GetChild(1)))
+                    //            {
+                    //                errStr += "Ошибка: поля \"" +
+                    //                          node.GetChild(1).Text +
+                    //                          "\" нет в таблице" +
+                    //                          node.GetChild(0).Text
+                    //                          + "\n";
+                    //            }
+                    //        }
+                    //        else
+                    //        {
+                    //            errStr += "Ошибка: таблица \"" +
+                    //                      node.GetChild(0).Text +
+                    //                      "\" не существует в данном контексте \n";
+                    //        }
+                    //        break;
+                    //    }
+                    //case "<":
+                    //case ">":
+                    //case "==":
+                    //case ">=":
+                    //case "<=":
+                    //case "<>":
+                    //    {
+                    //        break;
+                    //    }
+                    //default:
+                    //    {
+                    //        if (node.Parent.Text == "TABLES")
+                    //        {
+                    //            AddUsingTable(node.Text);
+                    //        }
+                    //        if (node.Parent.Text == "FIELDS")
+                    //        {
+                    //            if (!IsFieldExist(node))
+                    //            {
+                    //                errStr += "Ошибка: поле \"" +
+                    //                      node.Text +
+                    //                      "\" не существует в данном контексте \n";
+                    //            }
+                    //        }
+                    //        break;
+                    //    }
+
             }
             return errStr;
         }
 
         bool IsTableDeclared(ITree node)
         {
-            for (int i = 0; i < existTables.Count; i++)
+            for (int i = 0; i < usingTables[level].Count; i++)
             {
-                if (existTables[i].level >= level &&
-                    existTables[i].table._name == node.Text)
+                if (usingTables[level][i]._name == node.Text)
                 {
                     return true;
                 }
@@ -157,19 +146,20 @@ namespace MathLang
         {
             if (node.Text != "*")
             {
-                for (int i = 0; i < existTables.Count; i++)
+                for (int j = 1; j <= level; j++)
                 {
-                    if (existTables[i].level < level)
+                    for (int i = 0; i < usingTables[j].Count; i++)
                     {
-                        for (int j = 0; j < existTables[i].table._data.Count; j++)
+                        for (int k = 0; k < usingTables[j][i]._data.Count; k++)
                         {
-                            if (existTables[i].table._data[j]._name == node.Text)
+                            if (usingTables[j][i]._data[k]._name == node.Text)
                             {
                                 return true;
                             }
                         }
                     }
                 }
+
             }
             else
             {
@@ -178,14 +168,16 @@ namespace MathLang
 
             return false;
         }
-        
-        void SwapTreeNode(ITree parent)
+
+        void AddUsingTable(string tableName)
         {
-            ITree tmp = parent.GetChild(0);
-            parent.SetChild(0, parent.GetChild(1));
-            parent.SetChild(1, tmp);
+            if (!usingTables.ContainsKey(level))
+            {
+                usingTables.Add(level, new List<Table>());
+            }
+            usingTables[level].Add(tables[tableName]);
         }
-        
+
         //----------------------------------------------------
         //____________________________________________________
         public void CreateTable(string fileName)
@@ -215,7 +207,7 @@ namespace MathLang
 
         void FeelTable(string fileName, Table table)
         {
-            StreamReader reader = new StreamReader(fileName + ".txt"); 
+            StreamReader reader = new StreamReader(fileName + ".txt");
             try
             {
                 string fileStr = "";
@@ -227,16 +219,16 @@ namespace MathLang
                     strArr = fileStr.Split('\t');
                     arr.AddRange(strArr);
                 }
-                table.AddFields(arr.ToArray());
-                arr.Clear();
+                table.InitializeFields(arr.ToArray());
                 fileStr = reader.ReadLine();
                 while (fileStr != null)
                 {
+                    arr.Clear();
                     strArr = fileStr.Split('\t');
                     arr.AddRange(strArr);
+                    table.AddValues(arr.ToArray());
                     fileStr = reader.ReadLine();
                 }
-                table.AddValues(arr.ToArray());
             }
             catch (Exception)
             {

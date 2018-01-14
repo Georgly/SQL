@@ -41,7 +41,6 @@
   <ItemGroup>
     <Compile Include="AstNodePrinter.cs" />
     <Compile Include="BlockToken.cs" />
-    <Compile Include="DotToken.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="IntepreterException.cs" />
     <Compile Include="MathAstNode.cs" />

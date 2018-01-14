@@ -15,11 +15,14 @@ namespace MathLang
         Queue<BlockToken> subquery = new Queue<BlockToken>();
         Table fromResult = new Table();
         Table selectResult = new Table();
+        public string errStr = "";
 
         public Table SelectResult { get => selectResult; set => selectResult = value; }
         public Table FromResult { get => fromResult; set => fromResult = value; }
 
-        public BlockToken(ITree tree, int level, Dictionary<string, Table> tables, Dictionary<int, List<Table>> usingTables)
+        public BlockToken(ITree tree, int level,
+                          Dictionary<string, Table> tables,
+                          Dictionary<int, List<Table>> usingTables)
         {
             this.tree = tree;
             this.level = level;
@@ -31,15 +34,15 @@ namespace MathLang
             }
         }
 
+        #region Semantic analization
         public void SemanticAnalization()
         {
-            string errStr = "";
             SwapTreeNode();
             for (int i = 0; i < tree.ChildCount; i++)
             {
                 AnalyzeNode(tree.GetChild(i), ref errStr);
             }
-            Console.WriteLine(errStr);
+            //Console.WriteLine(errStr);
         }
 
         string AnalyzeNode(ITree node, ref string errStr)
@@ -175,8 +178,11 @@ namespace MathLang
             tree.SetChild(1, tmp);
             try
             {
-                tree.SetChild(1, tree.GetChild(2));
-                tree.SetChild(2, tmp);
+                if (tree.GetChild(2).Text == "where")
+                {
+                    tree.SetChild(1, tree.GetChild(2));
+                    tree.SetChild(2, tmp);
+                }
             }
             catch (Exception)
             { }
@@ -391,5 +397,90 @@ namespace MathLang
             }
             return type;
         }
+        #endregion
+
+        //---------------------------------------------------
+        //---------------------------------------------------
+
+        #region Interpreter
+
+        internal void StartInterpret()
+        {
+            for (int i = 0; i < tree.ChildCount; i++)
+            {
+                InterpretNode(tree.GetChild(i));
+            }
+        }
+
+        void InterpretNode(ITree node)
+        {
+            switch (node.Text)
+            {
+                case "where"://
+                    {
+
+                        break;
+                    }
+                case "select":
+                    {
+                        InterpretSelect();
+                        break;
+                    }
+                case "order by":
+                    {
+                        InterpretOrderBy(node.GetChild(0));
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        void InterpretWhere(ITree node)
+        {
+
+        }
+
+        void InterpretSelect()
+        {
+            for (int i = 0; i < FromResult.FieldsValues.Count; i++)
+            {
+                List<Field_Value> cortege = new List<Field_Value>();
+                for (int j = 0; j < SelectResult.Data.Count; j++)
+                {
+                    Field_Value f_v = FromResult.FieldsValues[i]
+                        .Find(o => o.field == SelectResult.Data[j]);
+                    cortege.Add(f_v);
+                }
+                SelectResult.FieldsValues.Add(cortege);
+            }
+        }
+
+        void InterpretOrderBy(ITree node)
+        {
+            int column = Convert.ToInt32(node.Text) - 1;
+            SelectResult.FieldsValues.Sort(
+                delegate (List<Field_Value> l1, List<Field_Value> l2)
+            {
+                if (l1[column].field.Type == "TEXT")
+                {
+                    string left = l1[column].value.ToString();
+                    string right = l2[column].value.ToString();
+                    if (left == null
+                        && right == null) return 0;
+                    else if (left == null) return -1;
+                    else if (right == null) return 1;
+                    else return left.CompareTo(right);
+                }
+                else
+                {
+                    double left = Convert.ToDouble(l1[column].value);
+                    double right = Convert.ToDouble(l2[column].value);
+                    return left.CompareTo(right);
+                }
+            });
+        }
+
+        #endregion
     }
 }

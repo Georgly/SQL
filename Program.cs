@@ -27,10 +27,10 @@ namespace MathLang
                 MathLangParser parser = new MathLangParser(tokens);
                 ITree program = (ITree)parser.execute().Tree;
                 AstNodePrinter.Print(program);
-                Interpreter semanticAnalyzer = new Interpreter(program);
-                semanticAnalyzer.CreateTable("tables.txt");
-                Console.WriteLine();
-                semanticAnalyzer.StartAnalyze();
+                Interpreter interpreter = new Interpreter(program);
+                interpreter.CreateTable("tables.txt");
+                //Console.WriteLine();
+                interpreter.Start();
                 //Console.WriteLine();
                 //MathLangIntepreter.Execute(program);
             }

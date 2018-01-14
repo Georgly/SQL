@@ -22,6 +22,7 @@ namespace MathLang
         Dictionary<string, Table> tables;
         Dictionary<int, List<Table>> usingTables;
         Queue<BlockToken> query = new Queue<BlockToken>();
+        string errStr = "";
 
         public Interpreter(ITree tree)
         {
@@ -30,17 +31,25 @@ namespace MathLang
             usingTables = new Dictionary<int, List<Table>>();
         }
 
-        public void StartAnalyze()
+        public void Start()
         {
-            string errStr = "";
+            SemanticAnalyzeStart();
+            if (errStr == "")
+            {
+                StartInterpret();
+            }
+        }
+
+        void SemanticAnalyzeStart()
+        {
             for (int i = 0; i < tree.ChildCount; i++)
             {
-                AnalyzeNode(tree.GetChild(i), ref errStr);
+                AnalyzeNode(tree.GetChild(i));
             }
             Console.WriteLine(errStr + "Анализ завершён.");
         }
 
-        string AnalyzeNode(ITree node, ref string errStr)
+        string AnalyzeNode(ITree node)
         {
             switch (node.Text)
             {
@@ -50,11 +59,21 @@ namespace MathLang
                         BlockToken block = new BlockToken(node, level, tables, usingTables);
                         block.SemanticAnalization();
                         query.Enqueue(block);
+                        errStr += block.errStr;
                         level--;
                         break;
                     }
             }
             return errStr;
+        }
+
+        void StartInterpret()
+        {
+            foreach (BlockToken block in query)
+            {
+                block.StartInterpret();
+                block.SelectResult.PrintTable();
+            }
         }
 
         //----------------------------------------------------

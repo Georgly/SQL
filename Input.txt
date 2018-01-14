@@ -1,4 +1,4 @@
-select Ba.*, gd
+select name, gd
 from Ba, D
-where D.ba == (select dady from A)
-order by 4;
+//where D.ba == Ba.name
+order by 2;

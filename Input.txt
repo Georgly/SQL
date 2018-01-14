@@ -1,4 +1,4 @@
-select /*A.dady, gd,*/ Ba.*
-from Ba, D/*, (select * from D where B.d<D.gd)*/
-where "Hoy" == (select dady from A)
-order by b;
+select Ba.*, gd
+from Ba, D
+where D.ba == (select dady from A)
+order by 4;

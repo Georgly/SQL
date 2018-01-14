@@ -1,4 +1,4 @@
-// $ANTLR 3.3 Nov 30, 2010 12:50:56 MathLang.g 2018-01-13 13:03:37
+// $ANTLR 3.3 Nov 30, 2010 12:50:56 MathLang.g 2018-01-14 11:47:35
 
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 219
@@ -37,7 +37,7 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 	public const int ML_COMMENT=15;
 	public const int NUMBER=16;
 	public const int FIELD=17;
-	public const int STRING=18;
+	public const int TEXT=18;
 	public const int DOT=19;
 	public const int ADD=20;
 	public const int SUB=21;
@@ -910,28 +910,28 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 	}
 	// $ANTLR end "FIELD"
 
-	partial void Enter_STRING();
-	partial void Leave_STRING();
+	partial void Enter_TEXT();
+	partial void Leave_TEXT();
 
-	// $ANTLR start "STRING"
-	[GrammarRule("STRING")]
-	private void mSTRING()
+	// $ANTLR start "TEXT"
+	[GrammarRule("TEXT")]
+	private void mTEXT()
 	{
-		Enter_STRING();
-		EnterRule("STRING", 14);
-		TraceIn("STRING", 14);
+		Enter_TEXT();
+		EnterRule("TEXT", 14);
+		TraceIn("TEXT", 14);
 		try
 		{
-			int _type = STRING;
+			int _type = TEXT;
 			int _channel = DefaultTokenChannel;
-			// MathLang.g:54:7: ( '\"' ( FIELD )* '\"' )
+			// MathLang.g:54:5: ( '\"' ( FIELD )* '\"' )
 			DebugEnterAlt(1);
-			// MathLang.g:54:9: '\"' ( FIELD )* '\"'
+			// MathLang.g:54:7: '\"' ( FIELD )* '\"'
 			{
-			DebugLocation(54, 9);
+			DebugLocation(54, 7);
 			Match('\"'); 
-			DebugLocation(54, 13);
-			// MathLang.g:54:13: ( FIELD )*
+			DebugLocation(54, 11);
+			// MathLang.g:54:11: ( FIELD )*
 			try { DebugEnterSubRule(9);
 			while (true)
 			{
@@ -950,9 +950,9 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// MathLang.g:54:13: FIELD
+					// MathLang.g:54:11: FIELD
 					{
-					DebugLocation(54, 13);
+					DebugLocation(54, 11);
 					mFIELD(); 
 
 					}
@@ -968,7 +968,7 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 
 			} finally { DebugExitSubRule(9); }
 
-			DebugLocation(54, 20);
+			DebugLocation(54, 18);
 			Match('\"'); 
 
 			}
@@ -978,12 +978,12 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 		}
 		finally
 		{
-			TraceOut("STRING", 14);
-			LeaveRule("STRING", 14);
-			Leave_STRING();
+			TraceOut("TEXT", 14);
+			LeaveRule("TEXT", 14);
+			Leave_TEXT();
 		}
 	}
-	// $ANTLR end "STRING"
+	// $ANTLR end "TEXT"
 
 	partial void Enter_DOT();
 	partial void Leave_DOT();
@@ -1411,7 +1411,7 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 
 	public override void mTokens()
 	{
-		// MathLang.g:1:8: ( SELECT | FROM | WHERE | ORDER_BY | T__31 | T__32 | T__33 | T__34 | WS | SL_COMMENT | ML_COMMENT | NUMBER | FIELD | STRING | DOT | ADD | SUB | MUL | DIV | GE | LE | NEQUALS | EQUALS | GT | LT | ASSIGN )
+		// MathLang.g:1:8: ( SELECT | FROM | WHERE | ORDER_BY | T__31 | T__32 | T__33 | T__34 | WS | SL_COMMENT | ML_COMMENT | NUMBER | FIELD | TEXT | DOT | ADD | SUB | MUL | DIV | GE | LE | NEQUALS | EQUALS | GT | LT | ASSIGN )
 		int alt10=26;
 		try { DebugEnterDecision(10, decisionCanBacktrack[10]);
 		try
@@ -1545,117 +1545,117 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 			break;
 		case 14:
 			DebugEnterAlt(14);
-			// MathLang.g:1:99: STRING
+			// MathLang.g:1:99: TEXT
 			{
 			DebugLocation(1, 99);
-			mSTRING(); 
+			mTEXT(); 
 
 			}
 			break;
 		case 15:
 			DebugEnterAlt(15);
-			// MathLang.g:1:106: DOT
+			// MathLang.g:1:104: DOT
 			{
-			DebugLocation(1, 106);
+			DebugLocation(1, 104);
 			mDOT(); 
 
 			}
 			break;
 		case 16:
 			DebugEnterAlt(16);
-			// MathLang.g:1:110: ADD
+			// MathLang.g:1:108: ADD
 			{
-			DebugLocation(1, 110);
+			DebugLocation(1, 108);
 			mADD(); 
 
 			}
 			break;
 		case 17:
 			DebugEnterAlt(17);
-			// MathLang.g:1:114: SUB
+			// MathLang.g:1:112: SUB
 			{
-			DebugLocation(1, 114);
+			DebugLocation(1, 112);
 			mSUB(); 
 
 			}
 			break;
 		case 18:
 			DebugEnterAlt(18);
-			// MathLang.g:1:118: MUL
+			// MathLang.g:1:116: MUL
 			{
-			DebugLocation(1, 118);
+			DebugLocation(1, 116);
 			mMUL(); 
 
 			}
 			break;
 		case 19:
 			DebugEnterAlt(19);
-			// MathLang.g:1:122: DIV
+			// MathLang.g:1:120: DIV
 			{
-			DebugLocation(1, 122);
+			DebugLocation(1, 120);
 			mDIV(); 
 
 			}
 			break;
 		case 20:
 			DebugEnterAlt(20);
-			// MathLang.g:1:126: GE
+			// MathLang.g:1:124: GE
 			{
-			DebugLocation(1, 126);
+			DebugLocation(1, 124);
 			mGE(); 
 
 			}
 			break;
 		case 21:
 			DebugEnterAlt(21);
-			// MathLang.g:1:129: LE
+			// MathLang.g:1:127: LE
 			{
-			DebugLocation(1, 129);
+			DebugLocation(1, 127);
 			mLE(); 
 
 			}
 			break;
 		case 22:
 			DebugEnterAlt(22);
-			// MathLang.g:1:132: NEQUALS
+			// MathLang.g:1:130: NEQUALS
 			{
-			DebugLocation(1, 132);
+			DebugLocation(1, 130);
 			mNEQUALS(); 
 
 			}
 			break;
 		case 23:
 			DebugEnterAlt(23);
-			// MathLang.g:1:140: EQUALS
+			// MathLang.g:1:138: EQUALS
 			{
-			DebugLocation(1, 140);
+			DebugLocation(1, 138);
 			mEQUALS(); 
 
 			}
 			break;
 		case 24:
 			DebugEnterAlt(24);
-			// MathLang.g:1:147: GT
+			// MathLang.g:1:145: GT
 			{
-			DebugLocation(1, 147);
+			DebugLocation(1, 145);
 			mGT(); 
 
 			}
 			break;
 		case 25:
 			DebugEnterAlt(25);
-			// MathLang.g:1:150: LT
+			// MathLang.g:1:148: LT
 			{
-			DebugLocation(1, 150);
+			DebugLocation(1, 148);
 			mLT(); 
 
 			}
 			break;
 		case 26:
 			DebugEnterAlt(26);
-			// MathLang.g:1:153: ASSIGN
+			// MathLang.g:1:151: ASSIGN
 			{
-			DebugLocation(1, 153);
+			DebugLocation(1, 151);
 			mASSIGN(); 
 
 			}
@@ -1791,7 +1791,7 @@ public partial class MathLangLexer : Antlr.Runtime.Lexer
 			this.transition = DFA10_transition;
 		}
 
-		public override string Description { get { return "1:1: Tokens : ( SELECT | FROM | WHERE | ORDER_BY | T__31 | T__32 | T__33 | T__34 | WS | SL_COMMENT | ML_COMMENT | NUMBER | FIELD | STRING | DOT | ADD | SUB | MUL | DIV | GE | LE | NEQUALS | EQUALS | GT | LT | ASSIGN );"; } }
+		public override string Description { get { return "1:1: Tokens : ( SELECT | FROM | WHERE | ORDER_BY | T__31 | T__32 | T__33 | T__34 | WS | SL_COMMENT | ML_COMMENT | NUMBER | FIELD | TEXT | DOT | ADD | SUB | MUL | DIV | GE | LE | NEQUALS | EQUALS | GT | LT | ASSIGN );"; } }
 
 		public override void Error(NoViableAltException nvae)
 		{

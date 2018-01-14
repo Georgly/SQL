@@ -7,14 +7,18 @@ namespace MathLang
 {
     public class Field
     {
-        public string _name;
-        public string _type;
-        public string _storedTableName;
+        private string name;
+        private string type;
+        private string storedTableName;
+
+        public string Name { get => name; set => name = value; }
+        public string Type { get => type; set => type = value; }
+        public string StoredTableName { get => storedTableName; set => storedTableName = value; }
 
         public Field()
         {
-            _name = "";
-            _type = "";
+            Name = "";
+            Type = "";
             //_value = new object();
             //_storedTableName = "";
         }

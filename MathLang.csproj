@@ -41,12 +41,13 @@
   <ItemGroup>
     <Compile Include="AstNodePrinter.cs" />
     <Compile Include="BlockToken.cs" />
+    <Compile Include="DotToken.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="IntepreterException.cs" />
     <Compile Include="MathAstNode.cs" />
     <Compile Include="MathLangIntepreter.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="SemanticAnalization.cs" />
+    <Compile Include="Interpreter.cs" />
     <Compile Include="Table.cs" />
   </ItemGroup>
   <ItemGroup>

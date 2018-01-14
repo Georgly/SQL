@@ -51,7 +51,7 @@ FIELD: ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )
         ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )*  
 ;
 
-STRING: '"' FIELD* '"'
+TEXT: '"' FIELD* '"'
 ;
 
 DOT:    '.'     ;
@@ -75,8 +75,8 @@ ASSIGN: '='     ;
 group:
   '('! term ')'!
 | NUMBER
-| STRING
-| request_params
+| TEXT
+| table_field
 | '('! exprList ')'!
 ;
 
@@ -94,8 +94,7 @@ tables_or_request: FIELD | '('! exprList ')'!;
 request_tables: (tables_or_request (',' tables_or_request)*) -> ^(TABLES tables_or_request+);
 from_: FROM^ request_tables;
 
-fields_list: table_field (','! table_field)*;
-orderby: ORDER_BY^ fields_list;
+orderby: ORDER_BY^ NUMBER;
 
 where_: WHERE^ term
 ;

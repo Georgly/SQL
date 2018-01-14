@@ -1,0 +1,5 @@
+name	dady
+TEXT	TEXT
+KiS	Gorshok
+Sector Gaza	Hoy
+Queen	Mercury

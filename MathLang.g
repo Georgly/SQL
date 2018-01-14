@@ -13,8 +13,6 @@ tokens {
   SELECT = 'select'    ;
   FROM = 'from'        ;
   WHERE = 'where'      ;
-  GROUP_BY = 'group by' ;
-  HAVING = 'having'    ;
   ORDER_BY = 'order by' ;
   PROGRAM              ;
   BLOCK                ;
@@ -53,6 +51,9 @@ FIELD: ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )
         ( 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' )*  
 ;
 
+TEXT: '"' FIELD* '"'
+;
+
 DOT:    '.'     ;
 
 ADD:    '+'     ;
@@ -74,6 +75,7 @@ ASSIGN: '='     ;
 group:
   '('! term ')'!
 | NUMBER
+| TEXT
 | request_params
 | '('! exprList ')'!
 ;
@@ -93,12 +95,9 @@ request_tables: (tables_or_request (',' tables_or_request)*) -> ^(TABLES tables_
 from_: FROM^ request_tables;
 
 fields_list: table_field (','! table_field)*;
-groupby: GROUP_BY^ fields_list;
-
 orderby: ORDER_BY^ fields_list;
 
-where_: WHERE^ term;
-having_: HAVING^ term
+where_: WHERE^ term
 ;
 
 expr1:
@@ -109,8 +108,6 @@ expr1:
 
 expr2:
   where_?
-  groupby?
-  having_?
   orderby?
 ;
 

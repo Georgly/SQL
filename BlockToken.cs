@@ -16,6 +16,7 @@ namespace MathLang
         Table fromResult = new Table();
         Table selectResult = new Table();
         public string errStr = "";
+        bool interpret = false;
 
         public Table SelectResult { get => selectResult; set => selectResult = value; }
         public Table FromResult { get => fromResult; set => fromResult = value; }
@@ -34,6 +35,8 @@ namespace MathLang
             }
         }
 
+
+
         #region Semantic analization
         public void SemanticAnalization()
         {
@@ -42,7 +45,6 @@ namespace MathLang
             {
                 AnalyzeNode(tree.GetChild(i), ref errStr);
             }
-            //Console.WriteLine(errStr);
         }
 
         string AnalyzeNode(ITree node, ref string errStr)
@@ -67,6 +69,8 @@ namespace MathLang
                         }
                         break;
                     }
+                case "and":
+                case "or":
                 case "TABLES":
                 case "FIELDS":
                     {
@@ -92,8 +96,11 @@ namespace MathLang
                 case ".":
                     {
                         AnalyzeDot(node, ref errStr);
-                        //DotToken dot = new DotToken(node, level, usingTables, FromResult, SelectResult);
-                        //dot.SemanticAnalyze(ref errStr);
+                        break;
+                    }
+                case "as":
+                    {
+                        AnalyzeAS(node, ref errStr);
                         break;
                     }
                 case "<":
@@ -162,6 +169,27 @@ namespace MathLang
             return false;
         }
 
+        bool IsFieldExist(ITree field, ITree tabel)
+        {
+            if (field.Text != "*")
+            {
+                for (int i = 0; i < FromResult.Data.Count; i++)
+                {
+                    if (FromResult.Data[i].Name == field.Text
+                        && FromResult.Data[i].StoredTableName == tabel.Text)
+                    {
+                        return true;
+                    }
+                }
+
+            }
+            else
+            {
+                return true;
+            }
+            return false;
+        }
+
         void AddUsingTable(string tableName)
         {
             if (!usingTables.ContainsKey(level))
@@ -186,14 +214,6 @@ namespace MathLang
             }
             catch (Exception)
             { }
-        }
-
-        void GenerateFromResult()
-        {
-            foreach (Table t in usingTables[level])
-            {
-                FromResult = Table.Mult(FromResult, t);
-            }
         }
 
         void AddFieldByName(string fieldName)
@@ -249,6 +269,7 @@ namespace MathLang
             BlockToken block = new BlockToken(node, level, tables, usingTables);
             block.SemanticAnalization();
             subquery.Enqueue(block);
+
             level--;
         }
 
@@ -260,16 +281,50 @@ namespace MathLang
             }
             if (errStr == "")
             {
-                GenerateFromResult();
+                FromResultFields();
+            }
+        }
+
+        void FromResultFields()
+        {
+            foreach (Table t in usingTables[level])
+            {
+                FromResult.Data.AddRange(t.Data);
+            }
+        }
+
+        void AnalyzeAS(ITree node, ref string errStr)
+        {
+            AnalyzeBlock(node.GetChild(0), ref errStr);
+            BlockToken block = subquery.Last();
+            SetTableAlias(node.GetChild(1).Text, block);
+            tables.Add(block.SelectResult._name, block.SelectResult);
+            AddUsingTable(block.SelectResult._name);
+        }
+
+        void SetTableAlias(string name, BlockToken block)
+        {
+            block.SelectResult._name = name;
+            block.FromResult._name = name;
+            for (int i = 0; i < block.SelectResult.GetAttributeCount(); i++)
+            {
+                block.SelectResult.Data[i].StoredTableName = name;
+            }
+            for (int i = 0; i < block.FromResult.GetAttributeCount(); i++)
+            {
+                block.FromResult.Data[i].StoredTableName = name;
             }
         }
 
         void AnalyzeOrderBy(ITree node, ref string errStr)
         {
-            if (Convert.ToInt32(node.GetChild(0).Text) < 1 ||
-                                Convert.ToInt32(node.GetChild(0).Text) > SelectResult.GetAttributeCount())
+            for (int i = 0; i < node.GetChild(0).ChildCount; i++)
             {
-                errStr += "Ошибка 'order by': значение числа должно быть между 1 и " + SelectResult.GetAttributeCount();
+                if (Convert.ToInt32(node.GetChild(0).GetChild(i).Text) < 1 ||
+                                Convert.ToInt32(node.GetChild(0).GetChild(i).Text) > SelectResult.GetAttributeCount())
+                {
+                    errStr += "Ошибка 'order by': значение числа должно быть между 1 и " + SelectResult.GetAttributeCount() + "\n";
+                }
             }
         }
 
@@ -277,13 +332,13 @@ namespace MathLang
         {
             if (IsTableDeclared(node.GetChild(0)))
             {
-                if (!IsFieldExist(node.GetChild(1)))
+                if (!IsFieldExist(node.GetChild(1), node.GetChild(0)))
                 {
                     errStr += "Ошибка: поля \"" +
                               node.GetChild(1).Text +
-                              "\" нет в таблице" +
+                              "\" нет в таблице \"" +
                               node.GetChild(0).Text
-                              + "\n";
+                              + "\"\n";
                     return;
                 }
                 if (node.Parent.Text.Equals("FIELDS"))
@@ -327,11 +382,6 @@ namespace MathLang
                             errStr += "Ошибка 'where' 'select': выборка содержит более одного столбца \n";
                             break;
                         }
-                        if (b.SelectResult.GetTablePower() >= 1)
-                        {
-                            errStr += "Ошибка 'where': выборка содержит более одного кортежа \n";
-                            break;
-                        }
                         type = b.SelectResult.Data[0].Type;
                         break;
                     }
@@ -343,9 +393,9 @@ namespace MathLang
                             {
                                 errStr += "Ошибка: поля \"" +
                                           node.GetChild(1).Text +
-                                          "\" нет в таблице" +
+                                          "\" нет в таблице \"" +
                                           node.GetChild(0).Text
-                                          + "\n";
+                                          + "\"\n";
                                 break;
                             }
                             if (node.GetChild(1).Text.Equals("*"))
@@ -355,6 +405,15 @@ namespace MathLang
                             }
                             Field f = FromResult.Data.Find(o => o.Name.Equals(node.GetChild(1).Text)
                                                              && o.StoredTableName.Equals(node.GetChild(0).Text));
+                            if (f == null)
+                            {
+                                errStr += "Ошибка: поле \"" +
+                                          node.GetChild(1).Text +
+                                          "\" из таблицы \"" +
+                                          node.GetChild(0).Text
+                                          + "\" не существует в данном контексте\n";
+                                break;
+                            }
                             type = f.Type;
                         }
                         else
@@ -368,12 +427,12 @@ namespace MathLang
                 default:
                     switch (node.Type)
                     {
-                        case 16://NUMBER
+                        case 20://NUMBER
                             {
                                 type = "NUMBER";
                                 break;
                             }
-                        case 17://FIELD
+                        case 21://FIELD
                             {
                                 if (!IsFieldExist(node))
                                 {
@@ -385,7 +444,7 @@ namespace MathLang
                                 type = FromResult.Data.Find(o => o.Name.Equals(node.Text)).Type;
                                 break;
                             }
-                        case 18://TEXT
+                        case 22://TEXT
                             {
                                 type = "TEXT";
                                 break;
@@ -399,26 +458,58 @@ namespace MathLang
         }
         #endregion
 
-        //---------------------------------------------------
-        //---------------------------------------------------
+
+
+
+
+
+
+
 
         #region Interpreter
 
         internal void StartInterpret()
         {
-            for (int i = 0; i < tree.ChildCount; i++)
+            if (!interpret)
             {
-                InterpretNode(tree.GetChild(i));
+                FromResult = new Table();
+                for (int i = 0; i < tree.ChildCount; i++)
+                {
+                    InterpretNode(tree.GetChild(i));
+                }
             }
+            interpret = true;
         }
 
         void InterpretNode(ITree node)
         {
             switch (node.Text)
             {
-                case "where"://
+                case "from":
+                case "TABLES":
                     {
+                        for (int i = 0; i < node.ChildCount; i++)
+                        {
+                            InterpretNode(node.GetChild(i));
+                        }
+                        break;
+                    }
+                case "as":
+                    {
+                        InterpretAs(node);
+                        break;
+                    }
+                case "BLOCK":
+                    {
+                        BlockToken blockToken = subquery.Dequeue();
+                        blockToken.StartInterpret();
+                        FromResult = Table.Mult(FromResult, blockToken.SelectResult);
 
+                        break;
+                    }
+                case "where":
+                    {
+                        InterpretWhere(node.GetChild(0));
                         break;
                     }
                 case "select":
@@ -432,18 +523,37 @@ namespace MathLang
                         break;
                     }
                 default:
+                    if (node.Parent.Text == "TABLES")
+                    {
+                        InterpretTable(node);
+                    }
+
                     break;
             }
         }
 
-        void InterpretWhere(ITree node)
+        void InterpretFrom(ITree node, ref string errStr)////
         {
+            Table table = new Table();
+            for (int i = 0; i < node.ChildCount; i++)
+            {
+                //table = Table.Mult(table, );
+            }
+        }
 
+        void InterpretTable(ITree node)
+        {
+            FromResult = Table.Mult(FromResult, usingTables[level].Find(o => o._name == node.Text));
+        }
+
+        void InterpretAs(ITree node)
+        {
+            InterpretNode(node.GetChild(0));
         }
 
         void InterpretSelect()
         {
-            for (int i = 0; i < FromResult.FieldsValues.Count; i++)
+            for (int i = 0; i < FromResult.GetTablePower(); i++)
             {
                 List<Field_Value> cortege = new List<Field_Value>();
                 for (int j = 0; j < SelectResult.Data.Count; j++)
@@ -458,29 +568,319 @@ namespace MathLang
 
         void InterpretOrderBy(ITree node)
         {
-            int column = Convert.ToInt32(node.Text) - 1;
-            SelectResult.FieldsValues.Sort(
-                delegate (List<Field_Value> l1, List<Field_Value> l2)
+            List<int> sortColumn = new List<int>();
+            for (int i = 0; i < node.ChildCount; i++)
             {
-                if (l1[column].field.Type == "TEXT")
-                {
-                    string left = l1[column].value.ToString();
-                    string right = l2[column].value.ToString();
-                    if (left == null
-                        && right == null) return 0;
-                    else if (left == null) return -1;
-                    else if (right == null) return 1;
-                    else return left.CompareTo(right);
-                }
-                else
-                {
-                    double left = Convert.ToDouble(l1[column].value);
-                    double right = Convert.ToDouble(l2[column].value);
-                    return left.CompareTo(right);
-                }
-            });
+                sortColumn.Add(Convert.ToInt32(node.GetChild(i).Text) - 1);
+            }
+
+            SelectResult.FieldsValues.Sort(
+                            delegate (List<Field_Value> l1, List<Field_Value> l2)
+                        {
+
+                            for (int i = 0; i < sortColumn.Count; i++)
+                            {
+                                if (l1[sortColumn[i]].field.Type == "TEXT")
+                                {
+                                    string left = l1[sortColumn[i]].value.ToString();
+                                    string right = l2[sortColumn[i]].value.ToString();
+                                    if (left == null
+                                        && right == null) return 0;
+                                    else if (left == null) return -1;
+                                    else if (right == null) return 1;
+                                    else
+                                    {
+                                        int comp = left.CompareTo(right);
+                                        if (comp != 0) return comp;
+
+                                    }
+                                }
+                                else
+                                {
+                                    double left = Convert.ToDouble(l1[sortColumn[i]].value);
+                                    double right = Convert.ToDouble(l2[sortColumn[i]].value);
+                                    int comp = left.CompareTo(right);
+                                    if (comp != 0) return comp;
+                                }
+                            }
+                            return 0;
+                        });
+
+
         }
 
+        void InterpretWhere(ITree node)
+        {
+            for (int i = 0; i < FromResult.GetTablePower(); i++)
+            {
+                if (!Condition(node, FromResult.FieldsValues[i]))
+                {
+                    FromResult.FieldsValues.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+        bool Condition(ITree node, List<Field_Value> f)
+        {
+
+            switch (node.Text)
+            {
+                case "and":
+                    {
+                        return And(node, f);
+                    }
+                case "or":
+                    {
+                        return Or(node, f);
+                    }
+                default:
+                    {
+                        return Compare(node, f);
+                    }
+            }
+        }
+
+        bool And(ITree node, List<Field_Value> f)
+        {
+            for (int i = 0; i < node.ChildCount; i++)
+            {
+                if (!Condition(node.GetChild(i), f))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool Or(ITree node, List<Field_Value> f)
+        {
+            for (int i = 0; i < node.ChildCount; i++)
+            {
+                if (Condition(node.GetChild(i), f))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool Compare(ITree node, List<Field_Value> f)
+        {
+            bool flag = true;
+            object[] operands = new object[2];
+
+            operands[0] = GetOperand(f, node.GetChild(0));
+            operands[1] = GetOperand(f, node.GetChild(1));
+            
+            switch (node.Text)
+            {
+                case "<":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) != -1)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) != -1)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                case ">":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) != 1)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) != 1)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                case "==":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) != 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) != 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                case ">=":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) < 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) < 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                case "<=":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) > 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) > 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                case "<>":
+                    {
+                        if (operands[0] is Double)
+                        {
+                            if (Convert.ToDouble(operands[0]).CompareTo(Convert.ToDouble(operands[1])) == 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            if (Convert.ToString(operands[0]).CompareTo(Convert.ToString(operands[1])) == 0)
+                            {
+                                flag = false;
+                            }
+                        }
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            return flag;
+        }
+
+        object GetOperand(ITree node)
+        {
+            switch (node.Text)
+            {
+
+                default:
+                    switch (node.Type)
+                    {
+                        case 16://NUMBER
+                            {
+                                return Convert.ToDouble(node.Text);
+                            }
+                        case 18://TEXT
+                            {
+                                return Convert.ToString(node.Text);
+                            }
+                        default:
+                            break;
+                    }
+                    break;
+            }
+            return null;
+        }
+
+        object GetOperand(List<Field_Value> cortege, ITree node)
+        {
+            Field_Value f = new Field_Value();
+            switch (node.Text)
+            {
+                case "BLOCK":
+                    {
+                        BlockToken b = subquery.Peek();
+                        b.StartInterpret();
+                        if (b.SelectResult.GetTablePower() > 1)
+                        {
+                            errStr += "Ошибка 'where' 'select': выборка содержит более одного кортежа \n";
+                            break;
+                        }
+                        if (b.SelectResult.Data[0].Type == "TEXT")
+                        {
+                            return Convert.ToString(b.SelectResult.FieldsValues[0][0].value);
+                        }
+                        else
+                        {
+                            return Convert.ToDouble(b.SelectResult.FieldsValues[0][0].value);
+                        }
+                    }
+                case ".":
+                    {
+                        f = cortege.Find(o => o.field.StoredTableName == node.GetChild(0).Text
+                                        && o.field.Name == node.GetChild(1).Text);
+                        if (f.field.Type == "TEXT")
+                        {
+                            return Convert.ToString(f.value);
+                        }
+                        else
+                        {
+                            return Convert.ToDouble(f.value);
+                        }
+                    }
+                default:
+                    {
+                        switch (node.Type)
+                        {
+                            case 20://NUMBER
+                                {
+                                    return Convert.ToDouble(node.Text);
+                                }
+                            case 21:
+                                {
+                                    f = cortege.Find(o => o.field.Name == node.Text);
+                                    if (f.field.Type == "TEXT")
+                                    {
+                                        return Convert.ToString(f.value);
+                                    }
+                                    else
+                                    {
+                                        return Convert.ToDouble(f.value);
+                                    }
+                                }
+                            case 22://TEXT
+                                {
+                                    return Convert.ToString(node.Text.Trim('\"'));
+                                }
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+            }
+            return null;
+        }
         #endregion
     }
 }

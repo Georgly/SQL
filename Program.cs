@@ -29,9 +29,7 @@ namespace MathLang
                 AstNodePrinter.Print(program);
                 Interpreter interpreter = new Interpreter(program);
                 interpreter.CreateTable("tables.txt");
-                //Console.WriteLine();
                 interpreter.Start();
-                //Console.WriteLine();
                 //MathLangIntepreter.Execute(program);
             }
             catch (Exception e)

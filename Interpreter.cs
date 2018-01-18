@@ -46,7 +46,11 @@ namespace MathLang
             {
                 AnalyzeNode(tree.GetChild(i));
             }
-            Console.WriteLine(errStr + "Анализ завершён.");
+            Console.Write(errStr);
+            MakeAnalyzeReport();
+            Console.WriteLine();
+            Console.WriteLine("------------------------------------------------------");
+            Console.WriteLine();
         }
 
         string AnalyzeNode(ITree node)
@@ -140,5 +144,22 @@ namespace MathLang
             }
         }
 
+        void MakeAnalyzeReport()
+        {
+            string report = "Анализ завершён: ";
+            int errCount = 0;
+            if (errStr == "")
+            {
+                errCount = 0;
+                report += "успешно " + 1 + ", ошибок " + errCount;
+            }
+            else
+            {
+                string[] separator = { "\n" };
+                errCount = errStr.Split(separator, StringSplitOptions.RemoveEmptyEntries).Length;
+                report += "успешно " + 0 + ", ошибок " + errCount;
+            }
+            Console.WriteLine(report);
+        }
     }
 }

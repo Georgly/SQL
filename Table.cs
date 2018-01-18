@@ -126,5 +126,6 @@ namespace MathLang
 
             return result;
         }
+        
     }
 }

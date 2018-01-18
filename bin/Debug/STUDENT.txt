@@ -1,0 +1,8 @@
+﻿STUDENT_ID	SURNAME	NAME	STIPEND	KURS	CITY	UNIV_ID
+NUMBER	TEXT	TEXT	NUMBER	NUMBER	TEXT	NUMBER
+1	Ivanov	Ivan	150	1	Orel	10
+32	Petrov	Petr	200	3	Kursk	10
+6	Sidorov	Vadim	150	4	Moskva	22
+10	Kuznets	Boris	0	2	Bransk	10
+12	Zayzeva	Olga	250	2	Lipetsk	10
+265	Pavlov	Andrey	0	3	Voronezh	10

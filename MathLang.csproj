@@ -45,6 +45,7 @@
     <Compile Include="IntepreterException.cs" />
     <Compile Include="MathAstNode.cs" />
     <Compile Include="MathLangIntepreter.cs" />
+    <Compile Include="MergeSort.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Interpreter.cs" />
     <Compile Include="Table.cs" />

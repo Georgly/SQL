@@ -14,11 +14,15 @@ tokens {
   FROM = 'from'        ;
   WHERE = 'where'      ;
   ORDER_BY = 'order by' ;
+  AS = 'as'            ;
   PROGRAM              ;
   BLOCK                ;
   FIELDS               ;
   TABLES               ;
   REQUEST              ;
+  SORT                 ;
+  AND = 'and'          ;
+  OR = 'or'            ;
 }
 
 
@@ -77,24 +81,27 @@ group:
 | NUMBER
 | TEXT
 | table_field
-| '('! exprList ')'!
+| ('('! exprList ')'! (AS^ FIELD)?)
 ;
 
 mult: group ( ( MUL | DIV )^ group )*  ;
 add:  mult  ( ( ADD | SUB )^ mult  )*  ;
 compare: add ( ( GE | LE | NEQUALS | EQUALS | GT | LT)^ add )?  ;
-term: compare  ;
+and: compare (AND^ compare )* ;
+or: and (OR^ and )*;
+term: or;
 
 table_field: (FIELD DOT^ (FIELD | '*')) | FIELD;
 request_params : '*' | table_field;
 formal_params: ( request_params (',' request_params)* ) -> ^(FIELDS request_params+);
 select_: SELECT^ formal_params;
 
-tables_or_request: FIELD | '('! exprList ')'!;
+tables_or_request: FIELD | ('('! exprList ')'! AS^ FIELD);
 request_tables: (tables_or_request (',' tables_or_request)*) -> ^(TABLES tables_or_request+);
 from_: FROM^ request_tables;
 
-orderby: ORDER_BY^ NUMBER;
+orderby : (NUMBER (',' NUMBER)*) -> ^(SORT NUMBER+);
+orderby_: ORDER_BY^ orderby;
 
 where_: WHERE^ term
 ;
@@ -107,7 +114,7 @@ expr1:
 
 expr2:
   where_?
-  orderby?
+  orderby_?
 ;
 
 exprList:

@@ -1,4 +1,5 @@
-select name, gd
-from Ba, D
-//where D.ba == Ba.name
-order by 2;
+﻿select SURNAME, SUBJ_NAME, MARK
+from STUDENT, SUBJECT, EXAM_MARKS
+where STUDENT.STUDENT_ID == EXAM_MARKS.STUDENT_ID 
+and SUBJECT.SUBJ_ID == EXAM_MARKS.SUBJ_ID
+order by 1, 3;
